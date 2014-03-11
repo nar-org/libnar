@@ -5,9 +5,11 @@
 ** Login   nicolas <nicolas@di-prima.fr>
 **
 ** Started on  Mon 10 Mar 2014 11:19:39 GMT Nicolas DI PRIMA
-** Last update Tue 11 Mar 2014 21:27:28 GMT Nicolas DI PRIMA
+** Last update Tue 11 Mar 2014 22:49:22 GMT Nicolas DI PRIMA
 */
 
+/* In order to use lseek64 (see man 3 lseek64) */
+#define _LARGEFILE64_SOURCE
 #include "libnar.h"
 
 #include <sys/types.h>
@@ -92,8 +94,7 @@ int write_nar_header(nar_writer* nar,
   nh.signature_position = nar->signature_position;
   nh.index_position = nar->index_position;
 
-  /* TODO: use lseek64 instead */
-  if (-1 == lseek(nar->fd, 0, SEEK_SET)) {
+  if (-1 == lseek64(nar->fd, 0, SEEK_SET)) {
     switch (errno) {
     case ESPIPE:
       /* The user is probably using a pipe or a socked or a FIFO,
@@ -142,8 +143,7 @@ int append_file(nar_writer* nar, uint64_t const flags,
     return -1;
   }
 
-  /* TODO: use lseek64 instead */
-  if (-1 == lseek(nar->fd, 0, SEEK_END)) {
+  if (-1 == lseek64(nar->fd, 0, SEEK_END)) {
     switch (errno) {
     case ESPIPE:
       /* The user is probably using a pipe or a socked or a FIFO,
@@ -251,8 +251,7 @@ int read_nar_header(nar_reader* nar, nar_header* nh)
     return -1;
   }
 
-  /* TODO: use lseek64 instead */
-  if (-1 == lseek(nar->fd, 0, SEEK_SET)) {
+  if (-1 == lseek64(nar->fd, 0, SEEK_SET)) {
     switch (errno) {
     case ESPIPE:
       /* The user is probably using a pipe or a socked or a FIFO,
@@ -260,7 +259,7 @@ int read_nar_header(nar_reader* nar, nar_header* nh)
       break;
     default:
       DPRINTF("lseek errno(%d): %s", errno, strerror(errno));
-      return -1;
+      return -errno;
       break;
     }
   }
@@ -276,13 +275,15 @@ int read_nar_header(nar_reader* nar, nar_header* nh)
 
   memcpy(nh, buf, sizeof(nar_header));
   nar->item_offset = 0;
+  nar->item_offset_content1 = 0;
+  nar->item_offset_content2 = 0;
 
   return 0;
 }
 
 int read_item_header(nar_reader* nar, item_header* ih)
 {
-  uint8_t buf[32];
+  uint8_t buf[sizeof(item_header)];
   int ret;
   int i, l;
 
@@ -328,6 +329,10 @@ int read_content1(nar_reader* nar, item_header const* ih,
     return -1;
   }
 
+  if (!ih->length1) {
+    return 0;
+  }
+
   length = ih->length1 - nar->item_offset_content1;
 
   length = (max > length) ? length : max;
@@ -362,7 +367,9 @@ int read_content2(nar_reader* nar, item_header const* ih,
   }
 
   if (ROUNDUP64(ih->length1) > nar->item_offset_content1) {
-    lseek(nar->fd, ROUNDUP64(ih->length1) - nar->item_offset_content1, SEEK_CUR);
+    lseek64(nar->fd,
+            ROUNDUP64(ih->length1) - nar->item_offset_content1,
+            SEEK_CUR);
     nar->item_offset_content1 = ROUNDUP64(ih->length1);
   }
 
@@ -386,22 +393,25 @@ int read_content2(nar_reader* nar, item_header const* ih,
   return i;
 }
 
-int jump_to_next_item_header(nar_reader* nar, item_header* ih)
+int jump_to_next_item_header(nar_reader* nar, item_header const* ih)
 {
-  uint64_t offset;
+  uint64_t offset = 0;
 
-  if (nar == NULL || ih == NULL || nar->fd == -1) {
-    DPRINTF("nar_reader(%p) item_header(%p) fd(%d)",
-            nar, ih, (nar) ? nar->fd : -1);
+  if (nar == NULL || nar->fd == -1) {
+    DPRINTF("nar_reader(%p) fd(%d)",
+            nar, (nar) ? nar->fd : -1);
     return -1;
+  }
+
+  if (ih == NULL) {
+    return 0;
   }
 
   offset = sizeof(item_header)
          + (ROUNDUP64(ih->length1)) + (ROUNDUP64(ih->length2))
          - nar->item_offset;
 
-  /* TODO: use lseek64 instead */
-  if (-1 == lseek(nar->fd, offset, SEEK_CUR)) {
+  if (-1 == lseek64(nar->fd, offset, SEEK_CUR)) {
     switch (errno) {
     case ESPIPE:
       /* in this case, we shouldn't want to jump, because if we drop the
