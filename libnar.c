@@ -5,7 +5,7 @@
 ** Login   nicolas <nicolas@di-prima.fr>
 **
 ** Started on  Mon 10 Mar 2014 11:19:39 GMT Nicolas DI PRIMA
-** Last update Tue 11 Mar 2014 21:20:24 GMT Nicolas DI PRIMA
+** Last update Tue 11 Mar 2014 21:27:28 GMT Nicolas DI PRIMA
 */
 
 #include "libnar.h"
@@ -361,9 +361,9 @@ int read_content2(nar_reader* nar, item_header const* ih,
     return -1;
   }
 
-  if (ALIGN64(ih->length1) > nar->item_offset_content1) {
-    lseek(nar->fd, ALIGN64(ih->length1) - nar->item_offset_content1, SEEK_CUR);
-    nar->item_offset_content1 = ALIGN64(ih->length1);
+  if (ROUNDUP64(ih->length1) > nar->item_offset_content1) {
+    lseek(nar->fd, ROUNDUP64(ih->length1) - nar->item_offset_content1, SEEK_CUR);
+    nar->item_offset_content1 = ROUNDUP64(ih->length1);
   }
 
   length = ih->length2 - nar->item_offset_content2;
@@ -397,7 +397,7 @@ int jump_to_next_item_header(nar_reader* nar, item_header* ih)
   }
 
   offset = sizeof(item_header)
-         + (ALIGN64(ih->length1)) + (ALIGN64(ih->length2))
+         + (ROUNDUP64(ih->length1)) + (ROUNDUP64(ih->length2))
          - nar->item_offset;
 
   /* TODO: use lseek64 instead */

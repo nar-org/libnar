@@ -5,7 +5,7 @@
 ** Login   nicolas <nicolas@di-prima.fr>
 **
 ** Started on  Thu 06 Mar 2014 17:56:12 GMT Nicolas DI PRIMA
-** Last update Tue 11 Mar 2014 21:19:38 GMT Nicolas DI PRIMA
+** Last update Tue 11 Mar 2014 21:27:09 GMT Nicolas DI PRIMA
 */
 
 #ifndef LIBNAR_H_
@@ -13,8 +13,11 @@
 
 # include "stdint.h"
 
-# if !defined(ALIGN64)
-#  define ALIGN64(value) (value + ((value % 8) ? (8 - (value % 8)) : 0))
+/**
+** align a value to ROUNDUP a value to 64bits
+*/
+# if !defined(ROUNDUP64)
+#  define ROUNDUP64(value) (value + ((value % 8) ? (8 - (value % 8)) : 0))
 # endif
 
 # define NAR_HEADER_MAGIC "[ NARH ]"
