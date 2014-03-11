@@ -5,7 +5,7 @@
 ** Login   nicolas <nicolas@di-prima.fr>
 **
 ** Started on  Thu 06 Mar 2014 17:56:12 GMT Nicolas DI PRIMA
-** Last update Tue 11 Mar 2014 19:07:51 GMT Nicolas DI PRIMA
+** Last update Tue 11 Mar 2014 21:19:38 GMT Nicolas DI PRIMA
 */
 
 #ifndef LIBNAR_H_
@@ -15,20 +15,6 @@
 
 # if !defined(ALIGN64)
 #  define ALIGN64(value) (value + ((value % 8) ? (8 - (value % 8)) : 0))
-# endif
-
-# if defined(DEBUG)
-#  include <stdio.h>
-
-#  define DPRINTF(fmt, ...)                                 \
-   do {                                                     \
-     fprintf(stderr, "[%s:%u][%s] " fmt "\n",               \
-             __FILE__, __LINE__, __func__, ## __VA_ARGS__); \
-   } while (0)
-# else
-#  define DPRINTF(fmt, ...) \
-   do {                     \
-   } while (0)
 # endif
 
 # define NAR_HEADER_MAGIC "[ NARH ]"

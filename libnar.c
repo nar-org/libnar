@@ -5,7 +5,7 @@
 ** Login   nicolas <nicolas@di-prima.fr>
 **
 ** Started on  Mon 10 Mar 2014 11:19:39 GMT Nicolas DI PRIMA
-** Last update Tue 11 Mar 2014 19:10:40 GMT Nicolas DI PRIMA
+** Last update Tue 11 Mar 2014 21:20:24 GMT Nicolas DI PRIMA
 */
 
 #include "libnar.h"
@@ -15,6 +15,20 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
+
+# if defined(DEBUG)
+#  include <stdio.h>
+
+#  define DPRINTF(fmt, ...)                                 \
+   do {                                                     \
+     fprintf(stderr, "[%s:%u][%s] " fmt "\n",               \
+             __FILE__, __LINE__, __func__, ## __VA_ARGS__); \
+   } while (0)
+# else
+#  define DPRINTF(fmt, ...) \
+   do {                     \
+   } while (0)
+# endif
 
 int init_nar_writer(nar_writer* nar, int fd)
 {
@@ -317,7 +331,6 @@ int read_content1(nar_reader* nar, item_header const* ih,
   length = ih->length1 - nar->item_offset_content1;
 
   length = (max > length) ? length : max;
-  DPRINTF("length: %llu", length);
   for (i = 0; i < length; i+=ret) {
     ret = read(nar->fd, &buf[i], length - i);
     if (ret == -1) {

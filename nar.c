@@ -5,7 +5,7 @@
 ** Login   nicolas <nicolas@di-prima.fr>
 **
 ** Started on  Tue 11 Mar 2014 13:49:05 GMT Nicolas DI PRIMA
-** Last update Tue 11 Mar 2014 19:24:35 GMT Nicolas DI PRIMA
+** Last update Tue 11 Mar 2014 21:19:31 GMT Nicolas DI PRIMA
 */
 
 #include "libnar.h"
@@ -21,6 +21,12 @@
 #include <getopt.h>
 
 # if defined(DEBUG)
+#  define DPRINTF(fmt, ...)                                 \
+   do {                                                     \
+     fprintf(stderr, "[%s:%u][%s] " fmt "\n",               \
+             __FILE__, __LINE__, __func__, ## __VA_ARGS__); \
+   } while (0)
+
 #  define ERROR(fmt, ...)                                   \
    do {                                                     \
      fprintf(stderr, "[ERROR][%s:%u][%s] " fmt "\n",        \
@@ -33,6 +39,10 @@
              __FILE__, __LINE__, __func__, ## __VA_ARGS__); \
    } while (0)
 # else
+#  define DPRINTF(fmt, ...) \
+   do {                     \
+   } while (0)
+
 #  define ERROR(fmt, ...)                                  \
    do {                                                    \
      fprintf(stderr, "[ERROR] " fmt "\n", ## __VA_ARGS__); \
