@@ -53,7 +53,7 @@
    } while (0)
 # endif
 
-int init_nar_writer(nar_writer* nar, int fd)
+int libnar_init_writer(nar_writer* nar, int fd)
 {
   if (nar == NULL) {
     DPRINTF("nar_write* nar == NULL");
@@ -67,7 +67,7 @@ int init_nar_writer(nar_writer* nar, int fd)
   return 0;
 }
 
-void close_nar_writer(nar_writer* nar)
+void libnar_close_writer(nar_writer* nar)
 {
   if (nar != NULL) {
     memset(nar, 0, sizeof(nar_writer));
@@ -90,9 +90,9 @@ static int write_buffer(int fd, uint8_t const* buf, uint64_t const size)
   return offset;
 }
 
-int write_nar_header(nar_writer* nar,
-                     uint64_t const cipher_type,
-                     uint64_t const compression_type)
+int libnar_write_nar_header(nar_writer* nar,
+                            uint64_t const cipher_type,
+                            uint64_t const compression_type)
 {
   nar_header nh;
   uint8_t* buf;
@@ -148,10 +148,10 @@ static int write_missing_0(int fd, uint64_t size)
 }
 
 
-int append_file(nar_writer* nar, uint64_t const flags,
-                char const* filepath, uint64_t const length_filepath,
-                uint64_t const length_content,
-	        get_computed_content callback, void* opaque)
+int libnar_append_file(nar_writer* nar, uint64_t const flags,
+                       char const* filepath, uint64_t const length_filepath,
+                       uint64_t const length_content,
+                       get_computed_content callback, void* opaque)
 {
   item_header pfh;
   uint8_t* buf;
@@ -240,7 +240,7 @@ int append_file(nar_writer* nar, uint64_t const flags,
   return 0;
 }
 
-int init_nar_reader(nar_reader* nar, int fd)
+int libnar_init_reader(nar_reader* nar, int fd)
 {
   if (nar == NULL) {
     DPRINTF("nar(%p)", nar);
@@ -253,14 +253,14 @@ int init_nar_reader(nar_reader* nar, int fd)
   return 0;
 }
 
-void close_nar_reader(nar_reader* nar)
+void libnar_close_reader(nar_reader* nar)
 {
   if (nar != NULL) {
     memset(nar, 0, sizeof(nar_reader));
   }
 }
 
-int read_nar_header(nar_reader* nar, nar_header* nh)
+int libnar_read_nar_header(nar_reader* nar, nar_header* nh)
 {
   uint8_t buf[64];
   int ret;
@@ -302,7 +302,7 @@ int read_nar_header(nar_reader* nar, nar_header* nh)
   return 0;
 }
 
-int read_item_header(nar_reader* nar, item_header* ih)
+int libnar_read_item_header(nar_reader* nar, item_header* ih)
 {
   uint8_t buf[sizeof(item_header)];
   int ret;
@@ -337,8 +337,8 @@ int read_item_header(nar_reader* nar, item_header* ih)
   return 0;
 }
 
-int read_content1(nar_reader* nar, item_header const* ih,
-                  char* buf, uint32_t const max)
+int libnar_read_content1(nar_reader* nar, item_header const* ih,
+                         char* buf, uint32_t const max)
 {
   int ret = 0;
   uint64_t i;
@@ -374,8 +374,8 @@ int read_content1(nar_reader* nar, item_header const* ih,
   return i;
 }
 
-int read_content2(nar_reader* nar, item_header const* ih,
-                  char* buf, uint32_t const max)
+int libnar_read_content2(nar_reader* nar, item_header const* ih,
+                         char* buf, uint32_t const max)
 {
   int ret = 0;
   uint64_t i;
@@ -414,7 +414,7 @@ int read_content2(nar_reader* nar, item_header const* ih,
   return i;
 }
 
-int jump_to_next_item_header(nar_reader* nar, item_header const* ih)
+int libnar_jump_to_next_item_header(nar_reader* nar, item_header const* ih)
 {
   uint64_t offset = 0;
 

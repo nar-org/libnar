@@ -158,7 +158,7 @@ static int main_append_file(struct nar_options const* opts)
     return -1;
   }
 
-  ret = init_nar_writer(&nw, ofd);
+  ret = libnar_init_writer(&nw, ofd);
   if (ret) {
     ERROR("init_nar_writer(%s) errno(%d): %s",
           opts->output, -ret, strerror(-ret));
@@ -174,8 +174,8 @@ static int main_append_file(struct nar_options const* opts)
   }
 
   length = lseek(ifd, 0, SEEK_END); lseek(ifd, 0, SEEK_SET);
-  ret = append_file(&nw, 0, opts->input, strlen(opts->input),
-                    length, default_reader, &ifd);
+  ret = libnar_append_file(&nw, 0, opts->input, strlen(opts->input),
+                           length, default_reader, &ifd);
   if (ret != 0) {
     ERROR("append(%s) errno(%d): %s",
           opts->input, -ret, strerror(-ret));
@@ -185,7 +185,7 @@ static int main_append_file(struct nar_options const* opts)
 exit_close_input:
   close(ifd);
 exit_close_output:
-  close_nar_writer(&nw);
+  libnar_close_writer(&nw);
   close(ofd);
   return ret;
 }
@@ -208,7 +208,7 @@ static int main_create_nar_file(struct nar_options const* opts)
     return -1;
   }
 
-  ret = init_nar_writer(&nw, fd);
+  ret = libnar_init_writer(&nw, fd);
   if (ret) {
     ERROR("init_nar_writer(%s) errno(%d): %s",
           opts->output, -ret, strerror(-ret));
@@ -216,7 +216,7 @@ static int main_create_nar_file(struct nar_options const* opts)
   }
 
   /* TODO: handle options */
-  ret = write_nar_header(&nw, 0, 0);
+  ret = libnar_write_nar_header(&nw, 0, 0);
   if (ret != 0) {
     ERROR("write_nar_header(%s) errno(%d): %s",
           opts->output, -ret, strerror(-ret));
@@ -224,7 +224,7 @@ static int main_create_nar_file(struct nar_options const* opts)
   }
 
 exit_function:
-  close_nar_writer(&nw);
+  libnar_close_writer(&nw);
   close(fd);
   return ret;
 }
@@ -292,12 +292,12 @@ static int main_list_nar_file(struct nar_options const* opts)
     return -1;
   }
 
-  ret = init_nar_reader(&nr, fd);
+  ret = libnar_init_reader(&nr, fd);
 
-  read_nar_header(&nr, &nh);
+  libnar_read_nar_header(&nr, &nh);
   dump_nar_header(&nh);
 
-  while(read_item_header(&nr, &ih) == 0) {
+  while(libnar_read_item_header(&nr, &ih) == 0) {
     memcpy(magic, &ih.magic, sizeof(uint64_t));
     magic[8] = '\0';
 
@@ -307,17 +307,17 @@ static int main_list_nar_file(struct nar_options const* opts)
       int size;
 
       memset(filename, 0, sizeof(filename));
-      size = read_content1(&nr, &ih, filename, sizeof(filename));
+      size = libnar_read_content1(&nr, &ih, filename, sizeof(filename));
       if (size >= 0) {
         PRINTF("filename(%d): %s", size, filename);
       } else {
         ERROR("can't read the filename: errno(%d): %s", -size, strerror(-size));
       }
     }
-    jump_to_next_item_header(&nr, &ih);
+    libnar_jump_to_next_item_header(&nr, &ih);
   }
 
-  close_nar_reader(&nr);
+  libnar_close_reader(&nr);
 
   close(fd);
 
@@ -344,11 +344,11 @@ static int main_extract_nar_file(struct nar_options const* opts)
     return -1;
   }
 
-  ret = init_nar_reader(&nr, fd);
+  ret = libnar_init_reader(&nr, fd);
 
-  read_nar_header(&nr, &nh);
+  libnar_read_nar_header(&nr, &nh);
 
-  while(read_item_header(&nr, &ih) == 0) {
+  while(libnar_read_item_header(&nr, &ih) == 0) {
     memcpy(magic, &ih.magic, sizeof(uint64_t));
     magic[8] = '\0';
 
@@ -357,17 +357,17 @@ static int main_extract_nar_file(struct nar_options const* opts)
       int size;
 
       memset(filename, 0, sizeof(filename));
-      size = read_content1(&nr, &ih, filename, sizeof(filename));
+      size = libnar_read_content1(&nr, &ih, filename, sizeof(filename));
       if (size >= 0 && !strncmp(filename, opts->target, sizeof(filename))) {
-        while ((size = read_content2(&nr, &ih, filename, sizeof(filename))) > 0) {
+        while ((size = libnar_read_content2(&nr, &ih, filename, sizeof(filename))) > 0) {
             write(STDOUT_FILENO, filename, size);
         }
       }
     }
-    jump_to_next_item_header(&nr, &ih);
+    libnar_jump_to_next_item_header(&nr, &ih);
   }
 
-  close_nar_reader(&nr);
+  libnar_close_reader(&nr);
 
   close(fd);
 

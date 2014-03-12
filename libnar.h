@@ -135,14 +135,14 @@ typedef struct {
 **
 ** @return returns 0 on success else -1.
 */
-int  init_nar_writer(nar_writer* nar, int fd);
+int libnar_init_writer(nar_writer* nar, int fd);
 
 /**
 ** Close the nar_writer state
 **
 ** @param nar the nar_writer state to reset
 */
-void close_nar_writer(nar_writer* nar);
+void libnar_close_writer(nar_writer* nar);
 
 /**
 ** write the NAR HEADER in the given state.
@@ -155,9 +155,9 @@ void close_nar_writer(nar_writer* nar);
 **
 ** @return 0 on success. -1 or -errno on error.
 */
-int  write_nar_header(nar_writer* nar,
-                      uint64_t const cipher_type,
-                      uint64_t const compression_type);
+int libnar_write_nar_header(nar_writer* nar,
+                            uint64_t const cipher_type,
+                            uint64_t const compression_type);
 
 /**
 ** append a file in a NAR ARCHIVE (the file descriptor in the nar_writer state)
@@ -171,10 +171,10 @@ int  write_nar_header(nar_writer* nar,
 **
 ** @return 0 on success. -1 or -errno on error.
 */
-int  append_file(nar_writer* nar, uint64_t const flags,
-                 char const* filepath, uint64_t const length_filepath,
-                 uint64_t const length_content,
-                 get_computed_content callback, void* opaque);
+int libnar_append_file(nar_writer* nar, uint64_t const flags,
+                       char const* filepath, uint64_t const length_filepath,
+                       uint64_t const length_content,
+                       get_computed_content callback, void* opaque);
 
 /*
 ** ---- READER
@@ -199,14 +199,14 @@ typedef struct {
 **
 ** @return 0 on success. -1 on error.
 */
-int init_nar_reader(nar_reader* nar, int fd);
+int libnar_init_reader(nar_reader* nar, int fd);
 
 /**
 ** close the nar_reader state
 **
 ** @param nar the reader state to reset
 */
-void close_nar_reader(nar_reader* nar);
+void libnar_close_reader(nar_reader* nar);
 
 /**
 ** read the NAR HEADER. This method SEEK to the begin of the file if possible
@@ -218,7 +218,7 @@ void close_nar_reader(nar_reader* nar);
 ** @return 0 on success and *nh is the filled with correct value. -1 or -errno
 ** on error
 */
-int read_nar_header(nar_reader* nar, nar_header* nh);
+int libnar_read_nar_header(nar_reader* nar, nar_header* nh);
 
 /**
 ** read the item header.
@@ -229,7 +229,7 @@ int read_nar_header(nar_reader* nar, nar_header* nh);
 ** @return 0 on success and *ih is filled with correct value. -1 or -errno on
 ** error.
 */
-int read_item_header(nar_reader* nar, item_header* ih);
+int libnar_read_item_header(nar_reader* nar, item_header* ih);
 
 /**
 ** read the content1 (filename in the case of a file)
@@ -244,8 +244,8 @@ int read_item_header(nar_reader* nar, item_header* ih);
 ** @return returns the readed size (i.e. less than max) or 0 (if nothing more
 ** to read). -1 or -errno on error.
 */
-int read_content1(nar_reader* nar, item_header const* ih,
-                  char* buf, uint32_t const max);
+int libnar_read_content1(nar_reader* nar, item_header const* ih,
+                         char* buf, uint32_t const max);
 
 /**
 ** read the content2 (the file content in the case of a file)
@@ -260,8 +260,8 @@ int read_content1(nar_reader* nar, item_header const* ih,
 ** @return returns the readed size (i.e. less than max) or 0 (if nothing more
 ** to read). -1 or -errno on error.
 */
-int read_content2(nar_reader* nar, item_header const* ih,
-                  char* buf, uint32_t const max);
+int libnar_read_content2(nar_reader* nar, item_header const* ih,
+                         char* buf, uint32_t const max);
 
 /**
 ** @param nar the reader state
@@ -269,6 +269,6 @@ int read_content2(nar_reader* nar, item_header const* ih,
 **
 ** @return 0 on success, -1 on error.
 */
-int jump_to_next_item_header(nar_reader* nar, item_header const* ih);
+int libnar_jump_to_next_item_header(nar_reader* nar, item_header const* ih);
 
 #endif /* !LIBNAR_H_ */
