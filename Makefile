@@ -1,11 +1,3 @@
-## Makefile for Project in libnar
-##
-## Made by Nicolas DI PRIMA
-## Login   <nicolas@di-prima.fr>
-##
-## Started on  Tue 11 Mar 2014 13:39:01 GMT Nicolas DI PRIMA
-## Last update Tue 11 Mar 2014 21:20:52 GMT Nicolas DI PRIMA
-
 SOURCES = libnar.c
 OBJECTS = $(SOURCES:.c=.o)
 
