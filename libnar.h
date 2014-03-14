@@ -67,6 +67,13 @@ typedef struct {
   uint64_t unused[2];
 } __attribute__((packed)) nar_header;
 
+typedef enum {
+  COMPRESSION_NONE        = 0,
+  COMPRESSION_DEFLATE     = 1,
+
+  COMPRESSION_TYPE_LENGTH = 2
+} nar_compression_type;
+
 /*
 ** ------------- ITEM HEADER -------------------------------------------------
 */
@@ -89,12 +96,16 @@ typedef struct {
 typedef enum {
   FILE_FLAG_EXECUTABLE = 0x00,
   FILE_FLAG_COMPRESSED = 0x01,
-  FILE_FLAG_CIPHERED   = 0x02
+  FILE_FLAG_ENCRYPTED  = 0x02
 } file_flags_index;
 
-# define IS_EXECUTABLE(flags) (flags && (1 << FILE_FLAG_EXECUTABLE))
-# define IS_COMPRESSED(flags) (flags && (1 << FILE_FLAG_COMPRESSED))
-# define IS_CIPHERED(flags)   (flags && (1 << FILE_FLAG_CIPHERED))
+# define FILE_EXECUTABLE (1 << FILE_FLAG_EXECUTABLE)
+# define FILE_COMPRESSED (1 << FILE_FLAG_COMPRESSED)
+# define FILE_ENCRYPTED  (1 << FILE_FLAG_ENCRYPTED)
+
+# define IS_EXECUTABLE(flags) (flags & FILE_EXECUTABLE)
+# define IS_COMPRESSED(flags) (flags & FILE_COMPRESSED)
+# define IS_ENCRYPTED(flags)  (flags & FILE_ENCRYPTED)
 
 /*
 ** ------------- LIBNAR ------------------------------------------------------

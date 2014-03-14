@@ -53,6 +53,33 @@
    } while (0)
 # endif
 
+#if defined(__BYTE_ORDER__)
+# if   __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    /* LITTLE ENDIAN */
+# elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#  error "this actual version of LIBNAR does not support BIG ENDIAN"
+# elif __BYTE_ORDER__ == __ORDER_PDP_ENDIAN__
+#  error "this actual version of LIBNAR does not support PDP ENDIAN"
+# else
+#  error "the actual compiler may not support this implementation of LIBNAR"
+# endif
+#else /* !defined(__BYTE_ODER__) */
+# if   defined(__i386__)    || defined(__alpha__)  \
+       || defined(__x86_64) || defined(__x86_64__) \
+       || defined(__ia64)   || defined(__ia64__)   \
+       || defined(_M_IX86)  || defined(_M_IA64)    \
+       || defined(_M_ALPHA) || defined(_WIN64)
+    /* LITTLE ENDIAN */
+# elif defined(__sparc)     || defined(__sparc__)   \
+       || defined(_POWER)   || defined(__powerpc__) \
+       || defined(__ppc__)  || defined(__hppa)      \
+       || defined(_MIPSEB)  || defined(__s390__)
+#  error "this actual version of LIBNAR does not support BIG ENDIAN"
+# else /* no information provided by the compiler */
+#  error "the actual compiler may not support this implementation of LIBNAR"
+# endif
+#endif
+
 int libnar_init_writer(nar_writer* nar, int fd)
 {
   if (nar == NULL) {

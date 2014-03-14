@@ -29,85 +29,100 @@
 ** POSSIBILITY OF SUCH DAMAGE.
 */
 
+/* In order to use lseek64 (see man 3 lseek64) */
+#define _LARGEFILE64_SOURCE
 #include "libnar.h"
+#include "nar.h"
+#include "default_reader.h"
+#include "zlib_readers.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
 #include <getopt.h>
 
-# if defined(DEBUG)
-#  define DPRINTF(fmt, ...)                                 \
-   do {                                                     \
-     fprintf(stderr, "[%s:%u][%s] " fmt "\n",               \
-             __FILE__, __LINE__, __func__, ## __VA_ARGS__); \
-   } while (0)
-
-#  define ERROR(fmt, ...)                                   \
-   do {                                                     \
-     fprintf(stderr, "[ERROR][%s:%u][%s] " fmt "\n",        \
-             __FILE__, __LINE__, __func__, ## __VA_ARGS__); \
-   } while (0)
-
-#  define PRINTF(fmt, ...)                                  \
-   do {                                                     \
-     fprintf(stdout, "[%s:%u][%s] " fmt "\n",               \
-             __FILE__, __LINE__, __func__, ## __VA_ARGS__); \
-   } while (0)
-# else
-#  define DPRINTF(fmt, ...) \
-   do {                     \
-   } while (0)
-
-#  define ERROR(fmt, ...)                                  \
-   do {                                                    \
-     fprintf(stderr, "[ERROR] " fmt "\n", ## __VA_ARGS__); \
-   } while (0)
-
-#  define PRINTF(fmt, ...)                         \
-   do {                                            \
-     fprintf(stdout, "" fmt "\n", ## __VA_ARGS__); \
-   } while (0)
-# endif
-
-
-static char short_options[] = "cla:n:e:h";
+static char short_options[] = "cla:n:e:ht:T:eEC";
 
 static struct option long_options[] = {
-  {"create",  no_argument,       NULL, 'c'},
-  {"append",  required_argument, NULL, 'a'},
-  {"list",    no_argument,       NULL, 'l'},
-  {"narfile", required_argument, NULL, 'n'},
-  {"help",    no_argument,       NULL, 'h'},
-  {"extract", required_argument, NULL, 'e'},
+  {"create",   no_argument,       NULL, 'c'},
+  {"append",   required_argument, NULL, 'a'},
+  {"compress", no_argument,       NULL, 'C'},
+  {"encrypt",  no_argument,       NULL, 'E'},
+  {"list",     no_argument,       NULL, 'l'},
+  {"narfile",  required_argument, NULL, 'n'},
+  {"help",     no_argument,       NULL, 'h'},
+  {"extract",  required_argument, NULL, 'e'},
+
+  {"compression-type", required_argument, NULL, 't'},
+  {"cipher-type",      required_argument, NULL, 'T'},
   {NULL, 0, NULL, 0}
 };
 
-enum option_action {
-  NOTHING = 0x00,
-  CREATE  = 0x01,
-  APPEND  = 0x02,
-  LIST    = 0x04,
-  EXTRACT = 0x08
+static struct compression_driver {
+  char const* name;
+  void* opaque;
+  get_computed_content callback;
+  int   (*size) (void*  opaque, uint64_t* size);
+  void* (*init) (struct nar_options const* nar);
+  void  (*close)(void*  opaque);
+} compression_drivers[COMPRESSION_TYPE_LENGTH + 1] = {
+  { .name = "none"
+  , .opaque = NULL
+  , .callback = default_reader
+  , .size = default_size
+  , .init = init_default_reader
+  , .close = close_default_reader },
+  { .name = "deflate"
+  , .opaque = NULL
+  , .callback = zlib_reader
+  , .size = zlib_size
+  , .init = init_zlib_reader
+  , .close = close_zlib_reader },
+
+  { .name = "help"
+  , .opaque = NULL, .callback = NULL, .init = NULL, .close = NULL}
 };
 
-struct nar_options {
-  enum option_action action;
-  char const* output;
-  char const* input;
-  char const* target;
-};
+# define IS_COMPRESSION_SUPPORTED(type)         \
+  (  type < COMPRESSION_TYPE_LENGTH             \
+  && compression_drivers[type].callback != NULL \
+  && compression_drivers[type].init     != NULL \
+  && compression_drivers[type].close    != NULL \
+  && compression_drivers[type].size     != NULL )
+
+static nar_compression_type to_compression_type(char const* type)
+{
+  nar_compression_type ret = COMPRESSION_NONE;
+
+  if (type != NULL) {
+    for (ret = 0; ret <= COMPRESSION_TYPE_LENGTH; ret++) {
+      if (!strncmp(type,
+                   compression_drivers[ret].name,
+                   strlen(type))) {
+        break;
+      }
+    }
+  }
+
+  return ret;
+}
+
+# define LICENCE_MESSAGE                                       \
+"Copyright (c) 2014, Nicolas DI PRIMA <nicolas@di-prima.fr>\n" \
+"this implementation of nar comes without any warranty\n"
 
 static void show_help_message(char const* name)
 {
   PRINTF("%s: a C version of the NAR archiver\n"
-         "    NAR is a free software... TODO\n"
          "Usage: %s --narfile|-n <filename> [option]\n"
+         "\n"
+	 LICENCE_MESSAGE
          "\n"
          "Options:\n"
          "    --help|-h\n"
@@ -121,28 +136,22 @@ static void show_help_message(char const* name)
          "                        the narfile specified in the option --narfile\n"
          "    --list|-l\n"
          "                        list the content of the archive given by option\n"
-         "                        --narfile",
+         "                        --narfile\n"
+         "    --extract=<path>|-e <path>\n"
+         "                        extract the item file named (path) from the given\n"
+         "                        narfile specified in the option --narfile",
          name, name);
-}
-
-static int default_reader(void* opaque, uint8_t* buf, uint32_t const max)
-{
-  int* fd;
-
-  if (opaque == NULL) {
-    DPRINTF("opaque(%p)", opaque);
-    return -1;
-  }
-
-  fd = (int*)opaque;
-  return read(*fd, buf, max);
 }
 
 static int main_append_file(struct nar_options const* opts)
 {
   nar_writer nw;
-  int ofd, ifd;
+  nar_reader nr;
+  nar_header nh;
+  struct compression_driver* cd = compression_drivers; /* Set to default */
+  int ofd;
   uint64_t length;
+  uint64_t flags = 0;
   int ret = 0;
 
   if (opts == NULL || opts->output == NULL || opts->input == NULL) {
@@ -151,11 +160,27 @@ static int main_append_file(struct nar_options const* opts)
     return -1;
   }
 
-  ofd = open(opts->output, O_WRONLY | O_APPEND);
+  ofd = open(opts->output, O_RDWR);
   if (ofd == -1) {
     ERROR("open(%s) errno(%d): %s",
           opts->output, errno, strerror(errno));
     return -1;
+  }
+
+  memset(&nh, 0, sizeof(nar_header));
+
+  if (opts->compress) {
+    libnar_init_reader(&nr, ofd);
+    libnar_read_nar_header(&nr, &nh);
+    libnar_close_reader(&nr);
+
+    if (!IS_COMPRESSION_SUPPORTED(nh.compression_type)) {
+      ERROR("compression type not supported %llu", nh.compression_type);
+      goto exit_close_output;
+    }
+
+    cd = &compression_drivers[nh.compression_type];
+    flags |= FILE_COMPRESSED;
   }
 
   ret = libnar_init_writer(&nw, ofd);
@@ -165,17 +190,17 @@ static int main_append_file(struct nar_options const* opts)
     goto exit_close_output;
   }
 
-  ifd = open(opts->input, O_RDONLY);
-  if (ifd == -1) {
-    ERROR("open(%s) errno(%d): %s",
-          opts->input, errno, strerror(errno));
-    ret = -errno;
+  cd->opaque = cd->init(opts);
+  if (cd->opaque == NULL) {
+    ERROR("can't initialize the compression_driver: %s", cd->name);
+    ret = -1;
     goto exit_close_output;
   }
 
-  length = lseek(ifd, 0, SEEK_END); lseek(ifd, 0, SEEK_SET);
-  ret = libnar_append_file(&nw, 0, opts->input, strlen(opts->input),
-                           length, default_reader, &ifd);
+  ret = cd->size(cd->opaque, &length);
+  DPRINTF("size: ret(%d) length(%llu)", ret, length);
+  ret = libnar_append_file(&nw, flags, opts->input, strlen(opts->input),
+                           length, cd->callback, cd->opaque);
   if (ret != 0) {
     ERROR("append(%s) errno(%d): %s",
           opts->input, -ret, strerror(-ret));
@@ -183,7 +208,7 @@ static int main_append_file(struct nar_options const* opts)
   }
 
 exit_close_input:
-  close(ifd);
+  cd->close(cd->opaque);
 exit_close_output:
   libnar_close_writer(&nw);
   close(ofd);
@@ -216,7 +241,7 @@ static int main_create_nar_file(struct nar_options const* opts)
   }
 
   /* TODO: handle options */
-  ret = libnar_write_nar_header(&nw, 0, 0);
+  ret = libnar_write_nar_header(&nw, 0, opts->compression_type);
   if (ret != 0) {
     ERROR("write_nar_header(%s) errno(%d): %s",
           opts->output, -ret, strerror(-ret));
@@ -264,8 +289,8 @@ static void dump_item_header(item_header* ih)
     if (IS_COMPRESSED(ih->flags)) {
       PRINTF("  compressed");
     }
-    if (IS_CIPHERED(ih->flags)) {
-      PRINTF("  ciphered");
+    if (IS_ENCRYPTED(ih->flags)) {
+      PRINTF("  encrypted");
     }
     PRINTF("length1: 0x%016llx", ih->length1);
     PRINTF("length2: 0x%016llx", ih->length2);
@@ -378,6 +403,7 @@ int main(int argc, char * const* argv)
 {
   int option_index = 0;
   int c;
+  int i;
   int help = 0, error = 0;
 
   struct nar_options opt;
@@ -434,11 +460,52 @@ int main(int argc, char * const* argv)
         error = 1;
       }
       break;
+    case 't':
+      opt.compression_type = to_compression_type(optarg);
+      switch (opt.compression_type) {
+      case COMPRESSION_TYPE_LENGTH:
+        PRINTF("list of supported compression type:");
+        for (i = COMPRESSION_NONE; i < COMPRESSION_TYPE_LENGTH; i++) {
+          PRINTF("  %s", compression_drivers[i].name);
+        }
+        break;
+      case COMPRESSION_TYPE_LENGTH + 1:
+        error = 1;
+        ERROR("compression type not supported: %s", optarg);
+        break;
+      default:
+        break;
+      }
+      break;
+    case 'T':
+      opt.cipher_type = optarg;
+      break;
+    case 'C':
+      if (opt.action == APPEND) {
+        opt.compress = 1;
+      } else {
+        ERROR("option --compress|-C only available with option --append|-a");
+        error = 1;
+      }
+      break;
+    case 'E':
+      if (opt.action == APPEND) {
+        opt.encrypt = 1;
+      } else {
+        ERROR("option --encrypt|-E only available with option --append|-a");
+        error = 1;
+      }
+      break;
     default:
       ERROR("unknown options %c (0x%08x)", c, c);
       error = 1;
       break;
     }
+  }
+
+  if (!IS_COMPRESSION_SUPPORTED(opt.compression_type)) {
+    ERROR("compression type not supported %u", opt.compression_type);
+    error = 1;
   }
 
   if (!help && !error && opt.output == NULL) {
