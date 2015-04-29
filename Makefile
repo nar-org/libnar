@@ -1,8 +1,7 @@
 SOURCES = libnar.c
 OBJECTS = $(SOURCES:.c=.o)
 
-CC      = clang
-#CC      = gcc
+CC      = gcc
 AR      = ar
 CFLAGS ?= -W -Wall -Wextra -Werror
 LDFLAGS = -L. -lnar
@@ -20,7 +19,7 @@ $(NAR): $(NAR_OBJECTS) $(OBJECTS)
 	$(CC) -lz -o $@ $+
 
 $(LIBRARY): $(OBJECTS)
-	$(AR) rc -o $@ $<
+	$(AR) rc $@ $+
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<

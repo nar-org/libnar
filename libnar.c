@@ -53,6 +53,10 @@
    } while (0)
 # endif
 
+#if defined(__APPLE__)
+# define lseek64 lseek
+#endif
+
 #if defined(__BYTE_ORDER__)
 # if   __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     /* LITTLE ENDIAN */

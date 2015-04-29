@@ -469,10 +469,6 @@ int main(int argc, char * const* argv)
           PRINTF("  %s", compression_drivers[i].name);
         }
         break;
-      case COMPRESSION_TYPE_LENGTH + 1:
-        error = 1;
-        ERROR("compression type not supported: %s", optarg);
-        break;
       default:
         break;
       }

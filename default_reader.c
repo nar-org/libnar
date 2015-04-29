@@ -41,6 +41,10 @@
 
 #include <errno.h>
 
+#if defined(__APPLE__)
+# define lseek64 lseek
+#endif
+
 void* init_default_reader(struct nar_options const* opts)
 {
   int* fd = NULL;
