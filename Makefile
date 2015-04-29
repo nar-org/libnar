@@ -27,3 +27,12 @@ $(LIBRARY): $(OBJECTS)
 clean:
 	rm -f $(OBJECTS) $(LIBRARY)
 	rm -f $(NAR_OBJECTS) $(NAR)
+	rm -f tests/test.nar tests/file2.txt
+
+.PHONY: tests
+tests: $(NAR)
+	./$(NAR) -n tests/test.nar -c
+	./$(NAR) -n tests/test.nar -a tests/file1.txt
+	./$(NAR) -n tests/test.nar -a LICENSE
+	./$(NAR) -n tests/test.nar -a README.md
+	./$(NAR) -n tests/test.nar -e tests/file1.txt > tests/file2.txt && diff tests/file1.txt tests/file2.txt
