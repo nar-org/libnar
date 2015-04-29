@@ -3,4 +3,10 @@ compiler:
   - gcc
 
 script:
-  - make tests
+  - make
+  - ./nar -n tests/test.nar -c
+  - ./nar -n tests/test.nar -a tests/file1.txt
+  - ./nar -n tests/test.nar -a LICENSE
+  - ./nar -n tests/test.nar -a README.md
+  - ./nar -n tests/test.nar -e tests/file1.txt > tests/file2.txt
+  - diff tests/file1.txt tests/file2.txt
