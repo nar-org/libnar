@@ -16,7 +16,7 @@ CFLAGS += -DDEBUG
 all: $(SOURCES) $(LIBRARY) $(NAR)
 
 $(NAR): $(NAR_OBJECTS) $(OBJECTS)
-	$(CC) -lz -o $@ $+
+	$(CC) -o $@ $+ -lz
 
 $(LIBRARY): $(OBJECTS)
 	$(AR) rc $@ $+

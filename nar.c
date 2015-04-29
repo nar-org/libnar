@@ -175,7 +175,7 @@ static int main_append_file(struct nar_options const* opts)
     libnar_close_reader(&nr);
 
     if (!IS_COMPRESSION_SUPPORTED(nh.compression_type)) {
-      ERROR("compression type not supported %llu", nh.compression_type);
+      ERROR("compression type not supported %llu", (unsigned long long int) nh.compression_type);
       goto exit_close_output;
     }
 
@@ -198,7 +198,7 @@ static int main_append_file(struct nar_options const* opts)
   }
 
   ret = cd->size(cd->opaque, &length);
-  DPRINTF("size: ret(%d) length(%llu)", ret, length);
+  DPRINTF("size: ret(%d) length(%llu)", ret, (unsigned long long int) length);
   ret = libnar_append_file(&nw, flags, opts->input, strlen(opts->input),
                            length, cd->callback, cd->opaque);
   if (ret != 0) {
@@ -265,11 +265,11 @@ static void dump_nar_header(nar_header* nh)
     PRINTF("magic: %s", magic);
     PRINTF("version: %u.%u", nh->version.major, nh->version.minor);
     PRINTF("cipher_type(0x%016llx) compression_type(0x%016llx)",
-           nh->cipher_type, nh->compression_type);
+           (unsigned long long int) nh->cipher_type, (unsigned long long int) nh->compression_type);
     PRINTF("signature_position(0x%016llx) index_position(0x%016llx)",
-           nh->signature_position, nh->index_position);
+           (unsigned long long int) nh->signature_position, (unsigned long long int) nh->index_position);
     PRINTF("unused[0](0x%016llx) unused[1](0x%016llx)",
-           nh->unused[0], nh->unused[1]);
+           (unsigned long long int) nh->unused[0], (unsigned long long int) nh->unused[1]);
   }
 }
 
@@ -282,7 +282,7 @@ static void dump_item_header(item_header* ih)
     magic[8] = '\0';
 
     PRINTF("magic: %s", magic);
-    PRINTF("flags: 0x%016llx", ih->flags);
+    PRINTF("flags: 0x%016llx", (unsigned long long int) ih->flags);
     if (IS_EXECUTABLE(ih->flags)) {
       PRINTF("  executable");
     }
@@ -292,8 +292,8 @@ static void dump_item_header(item_header* ih)
     if (IS_ENCRYPTED(ih->flags)) {
       PRINTF("  encrypted");
     }
-    PRINTF("length1: 0x%016llx", ih->length1);
-    PRINTF("length2: 0x%016llx", ih->length2);
+    PRINTF("length1: 0x%016llx", (unsigned long long int) ih->length1);
+    PRINTF("length2: 0x%016llx", (unsigned long long int) ih->length2);
   }
 }
 
