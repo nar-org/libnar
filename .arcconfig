@@ -1,0 +1,6 @@
+{
+  "lint.engine": "NarLintEngine",
+  "load":
+    [ ".arcanist"
+    ]
+}

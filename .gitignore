@@ -1,0 +1,4 @@
+.arcanist/.phutil_module_cache
+.lint-unit-tests
+
+*.swp
