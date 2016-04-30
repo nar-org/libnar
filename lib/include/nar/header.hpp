@@ -43,12 +43,40 @@
 
 # include "nar/error.hpp"
 # include "nar/standard.hpp"
-# include "nar/generic/header.hpp"
 
 namespace nar {
+namespace header {
+namespace generic {
 
-template<class C>
-struct is_basic_header : std::is_base_of<generic::header, C> { };
+struct header {
+  std::uint64_t magic;
+  std::uint64_t flags;
+  std::uint64_t length_1;
+  std::uint64_t length_2;
+
+  header( std::uint64_t m  = 0
+        , std::uint64_t f  = 0
+        , std::uint64_t l1 = 0
+        , std::uint64_t l2 = 0
+        );
+
+  header(header const&)            = default;
+  header(header &&)                = default;
+  header& operator=(header const&) = default;
+  header& operator=(header &&)     = default;
+  ~header()                        = default;
+
+  bool operator == (header const&) const noexcept;
+
+  void set_compression_1() noexcept;
+  void clr_compression_1() noexcept;
+  void set_compression_2() noexcept;
+  void clr_compression_2() noexcept;
+  bool compression_1() const noexcept;
+  bool compression_2() const noexcept;
+};
+
+} /* ! namespace generic */
 
 template<std::uint64_t MAGIC>
 struct basic_header : generic::header {
@@ -70,8 +98,18 @@ struct basic_header : generic::header {
   }
 };
 
-extern template struct basic_header<known_magic::header<std::uint64_t> >;
-using header = basic_header<known_magic::header<std::uint64_t> >;
+extern template struct basic_header<known_magic::narh<std::uint64_t> >;
+using narh = basic_header<known_magic::narh<std::uint64_t> >;
+extern template struct basic_header<known_magic::file<std::uint64_t> >;
+using file = basic_header<known_magic::file<std::uint64_t> >;
+
+} /* ! namespace header */
+/**
+ * @type_traits template<class C> struct is_basic_header<T>
+ * @brief compile type checker that the given class is of type header.
+ */
+template<class C>
+struct is_header : std::is_base_of<header::generic::header, C> { };
 
 } /* ! namespace nar */
 #endif /** ! LIB_INCLUDE_NAR_HEADER_HPP_  */

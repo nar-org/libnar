@@ -12,16 +12,12 @@ set(HEADERS
     include/nar/standard.hpp
     include/nar/roundup.hpp
 
-    include/nar/generic/header.hpp
-    include/nar/generic/item.hpp
     include/nar/header.hpp
-    include/nar/item.hpp
 )
 
 set(SOURCES
     src/roundup.cpp
     src/header.cpp
-    src/item.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED

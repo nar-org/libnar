@@ -16,9 +16,43 @@
 
 namespace nar {
 
-template struct basic_header<known_magic::header<std::uint64_t> >;
+namespace header {
 
-static_assert( std::is_trivially_copyable<header>::value
-             , "Oops"
-             );
+namespace generic {
+
+header::header( std::uint64_t m
+              , std::uint64_t f
+              , std::uint64_t l1
+              , std::uint64_t l2
+              )
+  : magic(m)
+  , flags(f)
+  , length_1(l1)
+  , length_2(l2)
+{
+}
+
+bool header::operator== (header const& e) const noexcept
+{
+  return this->magic == e.magic
+      && this->flags == e.flags
+      && this->length_1 == e.length_1
+      && this->length_2 == e.length_2;
+}
+
+void header::set_compression_1() noexcept { flags |= 1 << 0; }
+void header::clr_compression_1() noexcept { flags ^= 1 << 0; }
+void header::set_compression_2() noexcept { flags |= 1 << 1; }
+void header::clr_compression_2() noexcept { flags ^= 1 << 1; }
+
+bool header::compression_1() const noexcept { return flags & (1 << 0); }
+bool header::compression_2() const noexcept { return flags & (1 << 1); }
+
+}  /* ! namespace generic */
+
+}  /* ! namespace header */
+
+template struct header::basic_header<nar::known_magic::narh<std::uint64_t> >;
+template struct header::basic_header<nar::known_magic::file<std::uint64_t> >;
+
 } /* ! namespace nar */

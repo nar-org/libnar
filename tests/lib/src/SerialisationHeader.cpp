@@ -14,7 +14,6 @@
 
 #include "nar/standard.hpp"
 #include "nar/generic/header.hpp"
-#include "nar/generic/item.hpp"
 #include "nar/serialisation.hpp"
 
 TEST(NarUnitTests, NarHeaderParseOK)
@@ -23,42 +22,38 @@ TEST(NarUnitTests, NarHeaderParseOK)
                          "........"
                          "........"
                          "........"
-                         "........"
-                         "........"
-                         "........"
-                         "........"
-                         "........"
-                         "........"
-                         "\0\0\0\0\0\0\0\0"
-                         "\0\0\0\0\0\0\0\0"
                         );
 
-    nar::header header;
-
-    ASSERT_NO_THROW({header = nar::read<nar::header>(ss);});
-
-    ASSERT_TRUE(ss.good());
-
-    ASSERT_EQ(header.magic, nar::known_magic::header<std::uint64_t>);
-}
-TEST(NarUnitTests, NarHeaderParseNotEnoughBytes)
-{
-  using nar::error;
-  using boost;
-  std::stringstream ss("[ NARH ]"
-                       "........"
-                       "........"
-                       "........"
-                       "........"
-                       "........"
-                       "........"
-                      );
-  const std::size_t ss_size = 7 * 8;
-  nar::header header;
+    nar::header::narh header;
 
   ASSERT_NO_THROW({
     try {
-      header = nar::read<nar::header>(ss);
+      ss >> header;
+    } catch (nar::exception const& e) {
+      std::cerr << ::boost::diagnostic_information(e) << std::endl;
+    } catch (std::exception const& e) {
+      std::cerr << e.what() << std::endl;
+    }
+  });
+
+    ASSERT_TRUE(ss.good());
+
+    ASSERT_EQ(header.magic, nar::known_magic::narh<std::uint64_t>);
+}
+TEST(NarUnitTests, NarHeaderParseNotEnoughBytes)
+{
+  using namespace nar;
+  using namespace boost;
+  std::stringstream ss("[ NARH ]"
+                       "........"
+                       "........"
+                      );
+  const std::size_t ss_size = 3 * 8;
+  nar::header::narh header;
+
+  ASSERT_NO_THROW({
+    try {
+      ss >> header;
     } catch (nar::exception const& e) {
       std::uint64_t const* read     = get_error_info<error::length_read>(e);
       std::uint64_t const* expected = get_error_info<error::length_expected>(e);
@@ -72,26 +67,22 @@ TEST(NarUnitTests, NarHeaderParseNotEnoughBytes)
 }
 TEST(NarUnitTests, NarHeaderParseWrongMagic)
 {
-  using nar::error;
-  using boost;
+  using namespace nar;
+  using namespace boost;
   std::stringstream ss("<@@@@@@@>"
                        "........"
                        "........"
                        "........"
-                       "........"
-                       "........"
-                       "........"
-                       "........"
                       );
-  nar::header header;
+  nar::header::narh header;
 
   ASSERT_NO_THROW({
     try {
-      header = nar::read<nar::header>(ss);
+      ss >> header;
     } catch (nar::exception const& e) {
       std::uint64_t const* read     = get_error_info<error::magic_read>(e);
       std::uint64_t const* expected = get_error_info<error::magic_expected>(e);
-      std::uint64_t const magic = nar::known_magic::header<std::uint64_t>;
+      std::uint64_t const magic = nar::known_magic::narh<std::uint64_t>;
 
       std::uint64_t t;
       memcpy(reinterpret_cast<char*>(&t), "<@@@@@@@@>", 8);
@@ -110,21 +101,17 @@ TEST(NarUnitTests, NarHeaderParseWrongMagicNotEnoughBytes)
                          "........"
                          "........"
                         );
-    nar::header header;
-    ASSERT_THROW(header = nar::read<nar::header>(ss), nar::exception);
+    nar::header::narh header;
+    ASSERT_THROW( ss >> header , nar::exception);
 }
 
 namespace {
 
 struct Unit
 {
-  std::uint64_t const version;
-  std::uint64_t const cipher;
-  std::uint64_t const compression;
-  std::uint64_t const signature_position;
-  std::uint64_t const index_position;
-  std::uint64_t const unused_1;
-  std::uint64_t const unused_2;
+  std::uint64_t const flags;
+  std::uint64_t const length_1;
+  std::uint64_t const length_2;
 };
 
 class NarSerialiseHeader
@@ -136,18 +123,14 @@ TEST_P(NarSerialiseHeader, Property)
 {
   Unit const unit = GetParam();
 
-  nar::header header;
-  header.version = unit.version;
-  header.cipher = unit.cipher;
-  header.compression = unit.compression;
-  header.signature_position = unit.signature_position;
-  header.index_position = unit.index_position;
-  header.unused_1 = unit.unused_1;
-  header.unused_2 = unit.unused_2;
+  nar::header::narh header;
+  header.flags = unit.flags;
+  header.length_1 = unit.length_1;
+  header.length_2 = unit.length_2;
 
   std::stringstream ss;
 
-  nar::header header_1;
+  nar::header::narh header_1;
   ss << header;
   ss >> header_1;
 
@@ -155,15 +138,14 @@ TEST_P(NarSerialiseHeader, Property)
 }
 
 static std::vector<Unit> const tests =
-{ { 0, 0, 0, 0, 0, 0, 0 }
-, { 1, 0, 0, 0, 0, 0, 0 }
-, { 1, 1, 0, 0, 0, 0, 0 }
-, { 1, 1, 1, 0, 0, 0, 0 }
-, { 1, 1, 0, 1, 0, 0, 0 }
-, { 1, 1, 0, 0, 1, 0, 0 }
-, { 1, 1, 0, 0, 0, 1, 0 }
-, { 1, 1, 0, 0, 0, 0, 1 }
-, { 1, 1, 1, 1, 1, 1, 1 }
+{ { 0, 0, 0 }
+, { 0, 0, 1 }
+, { 0, 1, 0 }
+, { 0, 1, 1 }
+, { 1, 0, 0 }
+, { 1, 0, 1 }
+, { 1, 1, 0 }
+, { 1, 1, 1 }
 };
 
 INSTANTIATE_TEST_CASE_P( PropertyTests

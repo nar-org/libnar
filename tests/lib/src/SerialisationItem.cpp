@@ -24,9 +24,9 @@ TEST(NarUnitTests, NarGenericParseOK)
                          "........"
                         );
 
-    nar::generic::item generic;
+    nar::generic::header generic;
 
-    ASSERT_NO_THROW({generic = nar::read<nar::generic::item>(ss);});
+    ASSERT_NO_THROW({generic = nar::read<nar::generic::header>(ss);});
 
     ASSERT_TRUE(ss.good());
 }

@@ -13,7 +13,6 @@
 # include <vector>
 
 # include "nar/generic/header.hpp"
-# include "nar/generic/item.hpp"
 # include "nar/serialisation.hpp"
 # include "nar/error.hpp"
 

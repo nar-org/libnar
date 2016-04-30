@@ -36,6 +36,7 @@ typedef boost::error_info< struct tag_length_expected
 
 } /* ! namespace error */
 
+#if 0
 template <class ErrorInfo,class E>
 typename ErrorInfo::error_info::value_type const* get_error_info(E const& x) {
   return ::boost::get_error_info(x);
@@ -44,6 +45,7 @@ template <class ErrorInfo,class E>
 typename ErrorInfo::error_info::value_type*       get_error_info(E& x) {
   return ::boost::get_error_info(x);
 }
+#endif
 } /* ! namespace nar */
 
 # if defined(NDEBUG)

@@ -20,15 +20,13 @@
 
 # include <nar/error.hpp>
 # include <nar/generic/header.hpp>
-# include <nar/generic/item.hpp>
 # include <nar/header.hpp>
-# include <nar/item.hpp>
 
 namespace nar {
 namespace generic {
 
 template<class T>
-typename std::enable_if< is_basic_header<T>::value || is_basic_item<T>::value
+typename std::enable_if< nar::is_header<T>::value
                        , T
                        >::type
 read(std::istream& is) {
@@ -47,22 +45,15 @@ read(std::istream& is) {
 } /* ! namespace generic */
 
 template<class T>
-typename std::enable_if< is_basic_header<T>::value
+typename std::enable_if< nar::is_header<T>::value
                        , T
                        >::type
 read(std::istream& is) {
-  return T(generic::read<generic::header>(is));
-};
-template<class T>
-typename std::enable_if< is_basic_item<T>::value
-                       , T
-                       >::type
-read(std::istream& is) {
-  return T(generic::read<generic::item>(is));
+  return T(generic::read<header::generic::header>(is));
 };
 
 template<class T>
-typename std::enable_if< is_basic_header<T>::value || is_basic_item<T>::value
+typename std::enable_if< nar::is_header<T>::value
                        , std::ostream&
                        >::type
 write(std::ostream& os, T const& t) {
@@ -73,8 +64,7 @@ write(std::ostream& os, T const& t) {
 } /* ! namespace nar */
 
 template<class T>
-typename std::enable_if< nar::is_basic_header<T>::value ||
-                         nar::is_basic_item<T>::value
+typename std::enable_if< nar::is_header<T>::value
                        , std::istream&
                        >::type
 operator>> (std::istream& is, T& t) {
@@ -82,8 +72,7 @@ operator>> (std::istream& is, T& t) {
   return is;
 };
 template<class T>
-typename std::enable_if< nar::is_basic_header<T>::value ||
-                         nar::is_basic_item<T>::value
+typename std::enable_if< nar::is_header<T>::value
                        , std::ostream&
                        >::type
 operator<< (std::ostream& os, T const& t) {

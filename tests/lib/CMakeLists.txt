@@ -11,7 +11,6 @@ include_directories(
 add_executable(${PROJECT_NAME}
     src/MagicNumber.cpp
     src/Roundup.cpp
-    src/SerialisationItem.cpp
     src/SerialisationHeader.cpp
 
     src/main.cpp

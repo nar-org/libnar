@@ -34,7 +34,7 @@ void ofstream::open(char const* f) {
       std::ifstream ifs(f, std::ios_base::in
                          | std::ios_base::binary
                        );
-      nar::header header;
+      nar::header::narh header;
       ifs >> header;
     }
   }
@@ -45,7 +45,7 @@ void ofstream::open(char const* f) {
            | std::ios_base::app     // we append
            );
   if (add_header) {
-    ofs_ << nar::header();
+    ofs_ << nar::header::narh();
   }
 }
 void ofstream::open(std::string const& f) { this->open(f.c_str()); }
@@ -65,7 +65,7 @@ ofstream& ofstream::append(std::string const& path) {
   }
 
   if (fs::is_regular_file(p)) {
-    nar::file file;
+    nar::header::file file;
     file.flags = 0;  // TODO(NicolasDP): need setting
     file.length_1 = path.length();
 

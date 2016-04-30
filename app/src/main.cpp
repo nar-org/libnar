@@ -50,14 +50,10 @@ class MainOption : public Module
             << " Copyright (c) 2014-2016, All Rights Reserved."
               << std::endl
             << "current-version v"
-              << nar::current_version_major
-              << "."
-              << nar::current_version_minor
+              << nar::current_format_version
               << std::endl
             << "supported-version v"
-              << nar::compatible_version_major
-              << "."
-              << nar::compatible_version_minor
+              << nar::compatible_format_version
               << std::endl;
         throw no_error();
       }
@@ -97,39 +93,43 @@ int main(int const argc, char const* const* argv)
                      , std::ios_base::in | std::ios_base::binary
                      );
     try {
-      nar::header header; ifs >> header;
       while (ifs.good()) {
-        nar::generic::item item;
-        ifs >> item;
-        switch (item.magic) {
+        nar::header::generic::header h;
+        ifs >> h;
+        switch (h.magic) {
+          case nar::known_magic::narh<std::uint64_t>:
+            std::cout
+                << "[ NARH ]" << std::endl
+                << "  flags: " << std::hex << h.flags << std::endl
+                << "  size1: " << std::dec << h.length_1 << std::endl
+                << "  size2: " << std::dec << h.length_2 << std::endl;
+            break;
           case nar::known_magic::file<std::uint64_t>:
             {
-              nar::file file = item;
-              std::vector<char> data(item.length_1, 0);
+              std::vector<char> data(h.length_1, 0);
               ifs.read(data.data(), data.size());
-              if (ifs.gcount() != item.length_1) { /* TODO(nicolas) error */ }
+              if (ifs.gcount() != h.length_1) { /* TODO(nicolas) error */ }
               std::string filename(data.data(), data.size());
 
-              ifs.ignore( nar::PADDING64(item.length_1)
-                        + nar::ROUND_UP64(item.length_2)
+              ifs.ignore( nar::PADDING64(h.length_1)
+                        + nar::ROUND_UP64(h.length_2)
                         );
               std::cout
                 << "[ FILE ]" << std::endl
-                << "  flags: " << std::hex << file.flags << std::endl
+                << "  flags: " << std::hex << h.flags << std::endl
                 << "  path:  " << filename << std::endl
-                << "  size:  " << std::dec << file.length_2 << std::endl;
+                << "  size:  " << std::dec << h.length_2 << std::endl;
               break;
             }
           default:
             std::cout
-              << "[******]: unkown NAR item ("
-                << std::hex << item.magic
-                << ")" << std::endl
-              << "  flags:    " << std::hex << item.flags << std::endl
-              << "  lenght_1: " << std::dec << item.length_1 << std::endl
-              << "  lenght_2: " << std::dec << item.length_2 << std::endl;
-            ifs.ignore( nar::ROUND_UP64(item.length_1)
-                      + nar::ROUND_UP64(item.length_2)
+              << "[******]: unkown NAR header ("
+                << std::hex << h.magic << ")" << std::endl
+              << "  flags:    " << std::hex << h.flags << std::endl
+              << "  lenght_1: " << std::dec << h.length_1 << std::endl
+              << "  lenght_2: " << std::dec << h.length_2 << std::endl;
+            ifs.ignore( nar::ROUND_UP64(h.length_1)
+                      + nar::ROUND_UP64(h.length_2)
                       );
             break;
         }
