@@ -9,6 +9,8 @@ addons:
     packages:
       - cmake
       - cmake-data
+      - boost-filesystem1.60
+      - boost-program-options1.60
 
 addons:
   apt:
@@ -18,7 +20,6 @@ addons:
       - clang-3.8
       - g++-5
       - libgtest-dev
-      - libboost-all-dev
     sources: &sources
       - ubuntu-toolchain-r-test
       - llvm-toolchain-precise-3.5
@@ -31,14 +32,6 @@ compiler:
   - gcc
   - clang
 
-install:
-  - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
-  - mkdir ${DEPS_DIR} && cd ${DEPS_DIR}
-  - BOOST_URL="http://sourceforge.net/projects/boost/files/boost/1.60.0/boost_1_60_0.tar.gz"
-  - export CMAKE_OPTIONS+=" -DBOOST_ROOT=${DEPS_DIR}/boost"
-  - mkdir boost && travis_retry wget --quiet -O - ${BOOST_URL} | tar --strip-components=1 -xz -C boost;
-  - (cd boost/tools/build && ./bootstrap.sh && ./b2 install --prefix=${DEPS_DIR}/b2)
-  - export PATH=${DEPS_DIR}/b2/bin:${PATH}
 script:
   - cmake ${CMAKE_OPTIONS} .
   - make
