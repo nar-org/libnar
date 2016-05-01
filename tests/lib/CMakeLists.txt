@@ -1,6 +1,7 @@
 project(libnar-tests)
 
 find_package(GTest REQUIRED)
+find_package (Threads REQUIRED)
 
 include_directories(
     include
@@ -18,6 +19,7 @@ add_executable(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     ${GTEST_BOTH_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
     libnar
 )
 add_test(library-tests ${PROJECT_NAME})
