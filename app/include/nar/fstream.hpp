@@ -12,7 +12,7 @@
 # include <memory>
 # include <vector>
 
-# include "nar/generic/header.hpp"
+# include "nar/header.hpp"
 # include "nar/serialisation.hpp"
 # include "nar/error.hpp"
 

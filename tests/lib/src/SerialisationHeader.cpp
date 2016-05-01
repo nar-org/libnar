@@ -13,7 +13,7 @@
 #include "gtest/gtest.h"
 
 #include "nar/standard.hpp"
-#include "nar/generic/header.hpp"
+#include "nar/header.hpp"
 #include "nar/serialisation.hpp"
 
 TEST(NarUnitTests, NarHeaderParseOK)
@@ -26,15 +26,7 @@ TEST(NarUnitTests, NarHeaderParseOK)
 
     nar::header::narh header;
 
-  ASSERT_NO_THROW({
-    try {
-      ss >> header;
-    } catch (nar::exception const& e) {
-      std::cerr << ::boost::diagnostic_information(e) << std::endl;
-    } catch (std::exception const& e) {
-      std::cerr << e.what() << std::endl;
-    }
-  });
+  ASSERT_NO_THROW(ss >> header);
 
     ASSERT_TRUE(ss.good());
 
@@ -43,7 +35,6 @@ TEST(NarUnitTests, NarHeaderParseOK)
 TEST(NarUnitTests, NarHeaderParseNotEnoughBytes)
 {
   using namespace nar;
-  using namespace boost;
   std::stringstream ss("[ NARH ]"
                        "........"
                        "........"
@@ -54,21 +45,15 @@ TEST(NarUnitTests, NarHeaderParseNotEnoughBytes)
   ASSERT_NO_THROW({
     try {
       ss >> header;
-    } catch (nar::exception const& e) {
-      std::uint64_t const* read     = get_error_info<error::length_read>(e);
-      std::uint64_t const* expected = get_error_info<error::length_expected>(e);
-
-      ASSERT_NE(read, nullptr);
-      ASSERT_NE(expected, nullptr);
-      ASSERT_EQ(*read    , ss_size);
-      ASSERT_EQ(*expected, sizeof(header));
+    } catch (nar::error::invalid_header_length const& e) {
+      ASSERT_EQ(e.received_, ss_size);
+      ASSERT_EQ(e.expected_, sizeof(header));
     }
   });
 }
 TEST(NarUnitTests, NarHeaderParseWrongMagic)
 {
   using namespace nar;
-  using namespace boost;
   std::stringstream ss("<@@@@@@@>"
                        "........"
                        "........"
@@ -79,18 +64,13 @@ TEST(NarUnitTests, NarHeaderParseWrongMagic)
   ASSERT_NO_THROW({
     try {
       ss >> header;
-    } catch (nar::exception const& e) {
-      std::uint64_t const* read     = get_error_info<error::magic_read>(e);
-      std::uint64_t const* expected = get_error_info<error::magic_expected>(e);
+    } catch (nar::error::invalid_magic_number const& e) {
       std::uint64_t const magic = nar::known_magic::narh<std::uint64_t>;
-
       std::uint64_t t;
       memcpy(reinterpret_cast<char*>(&t), "<@@@@@@@@>", 8);
 
-      ASSERT_NE(read, nullptr);
-      ASSERT_NE(expected, nullptr);
-      ASSERT_EQ(*read    , t);
-      ASSERT_EQ(*expected, magic);
+      ASSERT_EQ(e.received_, t);
+      ASSERT_EQ(e.expected_, magic);
     }
   });
 }

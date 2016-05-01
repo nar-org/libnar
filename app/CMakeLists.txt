@@ -2,7 +2,6 @@ project(nar)
 
 find_package(Boost 1.55 REQUIRED
   COMPONENTS
-    exception
     program_options
     filesystem
 )

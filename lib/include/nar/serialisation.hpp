@@ -19,7 +19,7 @@
 # include <ostream>
 
 # include <nar/error.hpp>
-# include <nar/generic/header.hpp>
+# include <nar/header.hpp>
 # include <nar/header.hpp>
 
 namespace nar {
@@ -34,9 +34,7 @@ read(std::istream& is) {
 
   is.read(reinterpret_cast<char*>(&t), sizeof(t));
   if (is.gcount() != sizeof(t)) {
-    throw nar::exception() NAR_ERROR_DETAILS()
-      << error::length_read(is.gcount())
-      << error::length_expected(sizeof(t));
+    throw nar::error::invalid_header_length(sizeof(t), is.gcount());
   }
 
   return std::move(t);
