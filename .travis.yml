@@ -1,38 +1,39 @@
-language: c++
+language: cpp
 os: linux
 sudo: false
 
 addons:
   apt:
-    sources:
-      - george-edison55-precise-backports # cmake 3.2.3 / doxygen 1.8.3
+    sources: &sources
+      - george-edison55-precise-backports # cmake 3.2.3
+      - ubuntu-toolchain-r-test
+      - llvm-toolchain-precise-3.8
+      - llvm-toolchain-precise
+      - boost-latest
     packages:
       - cmake
       - cmake-data
-      - boost-filesystem1.60
-      - boost-program-options1.60
-
-addons:
-  apt:
-    packages:
-      - clang-3.6
-      - clang-3.7
+      - libboost1.55-all-dev
       - clang-3.8
       - g++-5
       - libgtest-dev
-    sources: &sources
-      - ubuntu-toolchain-r-test
-      - llvm-toolchain-precise-3.5
-      - llvm-toolchain-precise-3.6
-      - llvm-toolchain-precise-3.7
-      - llvm-toolchain-precise-3.8
-      - llvm-toolchain-precise
 
 compiler:
   - gcc
   - clang
 
+install:
+  - mkdir ~/gtest
+  - cd ~/gtest
+  - export GTEST_LIBRARY_PATH=$(pwd)
+  - cmake -D CMAKE_INSTALL_PREFIX:PATH=./ /usr/src/gtest
+  - make
+  - cd -
+  - export CMAKE_OPTIONS="$CMAKE_OPTIONS -D GTEST_ROOT=${GTEST_LIBRARY_PATH}"
+  - if [ ${CXX} == "gcc" ];   then export CMAKE_OPTIONS="${CMAKE_OPTIONS} -D CMAKE_CXX_COMPILER=g++-5";   fi
+  - if [ ${CXX} == "clang" ]; then export CMAKE_OPTIONS="${CMAKE_OPTIONS} -D CMAKE_CXX_COMPILER=clang++"; fi
+
 script:
   - cmake ${CMAKE_OPTIONS} .
-  - make
+  - make -j8 all
   - ./tests/lib/libnar-tests

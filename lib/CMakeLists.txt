@@ -1,6 +1,6 @@
 project(libnar)
 
-find_package(Boost 1.54 REQUIRED COMPONENTS exception)
+find_package(Boost 1.55 REQUIRED COMPONENTS exception)
 
 include_directories(
     include
