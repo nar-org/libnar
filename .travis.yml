@@ -13,7 +13,8 @@ addons:
     packages:
       - cmake
       - cmake-data
-      - libboost1.55-all-dev
+      - libboost-program-options1.55-dev
+      - libboost-filesystem1.55-dev
       - clang-3.8
       - g++-5
       - libgtest-dev
@@ -30,10 +31,10 @@ install:
   - make
   - cd -
   - export CMAKE_OPTIONS="$CMAKE_OPTIONS -D GTEST_ROOT=${GTEST_LIBRARY_PATH}"
-  - if [ ${CXX} == "gcc" ];   then export CMAKE_OPTIONS="${CMAKE_OPTIONS} -D CMAKE_CXX_COMPILER=g++-5";   fi
-  - if [ ${CXX} == "clang" ]; then export CMAKE_OPTIONS="${CMAKE_OPTIONS} -D CMAKE_CXX_COMPILER=clang++"; fi
+  - if [ ${CXX} == "g++" ];   then export CMAKE_OPTIONS="${CMAKE_OPTIONS} -D CMAKE_CXX_COMPILER=g++-5";   fi
 
 script:
+  - ${CXX} --version
   - cmake ${CMAKE_OPTIONS} .
   - make libnar-tests
   - ./tests/lib/libnar-tests
