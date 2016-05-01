@@ -31,6 +31,7 @@ TEST(NarUnitTests, NarHeaderParseOK)
     ASSERT_TRUE(ss.good());
 
     ASSERT_EQ(header.magic, nar::known_magic::narh<std::uint64_t>);
+  ASSERT_EQ(header.magic, nar::header::narh::value);
 }
 TEST(NarUnitTests, NarHeaderParseNotEnoughBytes)
 {

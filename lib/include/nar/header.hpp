@@ -79,7 +79,10 @@ struct header {
 } /* ! namespace generic */
 
 template<std::uint64_t MAGIC>
-struct basic_header : generic::header {
+struct basic_header
+    : generic::header
+    , std::integral_constant<std::uint64_t, MAGIC>
+{
   basic_header() : generic::header(MAGIC) { }
 
   explicit
