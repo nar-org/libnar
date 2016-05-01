@@ -114,5 +114,20 @@ using file = basic_header<known_magic::file<std::uint64_t> >;
 template<class C>
 struct is_header : std::is_base_of<header::generic::header, C> { };
 
+template<class T>
+typename std::enable_if< is_header<T>::value
+                         && T::value == known_magic::narh<std::uint64_t>
+                       , std::uint16_t
+                       >::type
+version(T const& t) { return (t.flags >> 46) & 0x0000FFFF; }
+template<class T>
+typename std::enable_if< is_header<T>::value
+                         && T::value == known_magic::narh<std::uint64_t>
+                       , void
+                       >::type
+version(T& t, std::uint16_t const& v) {
+  t.flags &= 0x0000FFFFFFFF;
+  t.flags |= (static_cast<std::uint64_t>(v) << 46);
+}
 } /* ! namespace nar */
 #endif /** ! LIB_INCLUDE_NAR_HEADER_HPP_  */

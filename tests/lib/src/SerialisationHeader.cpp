@@ -18,20 +18,24 @@
 
 TEST(NarUnitTests, NarHeaderParseOK)
 {
-    std::stringstream ss("[ NARH ]"
-                         "........"
-                         "........"
-                         "........"
-                        );
+  std::stringstream ss( std::ios_base::in
+                      | std::ios_base::out
+                      | std::ios_base::binary);
 
-    nar::header::narh header;
+  ss << "[ NARH ]";
+  std::array<char, 24> array;
+  array.fill(0);
+  ss.write(array.data(), array.size());
+
+  nar::header::narh header;
 
   ASSERT_NO_THROW(ss >> header);
 
-    ASSERT_TRUE(ss.good());
+  ASSERT_TRUE(ss.good());
 
-    ASSERT_EQ(header.magic, nar::known_magic::narh<std::uint64_t>);
+  ASSERT_EQ(header.magic, nar::known_magic::narh<std::uint64_t>);
   ASSERT_EQ(header.magic, nar::header::narh::value);
+  ASSERT_EQ(0, nar::version(header));
 }
 TEST(NarUnitTests, NarHeaderParseNotEnoughBytes)
 {
