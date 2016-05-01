@@ -35,5 +35,5 @@ install:
 
 script:
   - cmake ${CMAKE_OPTIONS} .
-  - make -j8 all
+  - make libnar-tests
   - ./tests/lib/libnar-tests
