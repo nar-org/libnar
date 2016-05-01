@@ -55,4 +55,12 @@ bool header::compression_2() const noexcept { return flags & (1 << 1); }
 template struct header::basic_header<nar::known_magic::narh<std::uint64_t> >;
 template struct header::basic_header<nar::known_magic::file<std::uint64_t> >;
 
+std::uint16_t version(header::narh const& t) {
+  return (t.flags >> 46) & 0x0000FFFF;
+}
+void version(header::narh& t, std::uint16_t const& v) {
+  t.flags &= 0x0000FFFFFFFF;
+  t.flags |= (static_cast<std::uint64_t>(v) << 46);
+}
+
 } /* ! namespace nar */
