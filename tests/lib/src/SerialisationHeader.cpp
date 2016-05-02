@@ -4,6 +4,9 @@
  * @date    2016-04-18
  *
  * @Copyright Nicolas DI PRIMA
+ *    Copyright (c) 2016, Nicolas DI PRIMA. All rights reserved.
+ *    This software may be modified and distributed under the terms
+ *    of the BSD license. See the LICENSE file for details.
  */
 
 #include <sstream>
@@ -27,15 +30,26 @@ TEST(NarUnitTests, NarHeaderParseOK)
   array.fill(0);
   ss.write(array.data(), array.size());
 
-  nar::header::narh header;
+  nar::header::initiate header;
 
   ASSERT_NO_THROW(ss >> header);
 
   ASSERT_TRUE(ss.good());
 
-  ASSERT_EQ(header.magic, nar::known_magic::narh<std::uint64_t>);
-  ASSERT_EQ(header.magic, nar::header::narh::value);
+  ASSERT_EQ(header.magic, nar::known_magic::initiate<std::uint64_t>);
+  ASSERT_EQ(header.magic, nar::header::initiate::value);
   ASSERT_EQ(0, nar::version(header));
+}
+TEST(NarUnitTests, NarDefaultVersionOK)
+{
+  nar::header::initiate header;
+  ASSERT_EQ(nar::current_format_version, nar::version(header));
+}
+TEST(NarUnitTests, NarDefaultSetGetVersionOK)
+{
+  nar::header::initiate header;
+  nar::version(header, 12);
+  ASSERT_EQ(12, nar::version(header));
 }
 TEST(NarUnitTests, NarHeaderParseNotEnoughBytes)
 {
@@ -45,7 +59,7 @@ TEST(NarUnitTests, NarHeaderParseNotEnoughBytes)
                        "........"
                       );
   const std::size_t ss_size = 3 * 8;
-  nar::header::narh header;
+  nar::header::initiate header;
 
   ASSERT_NO_THROW({
     try {
@@ -64,13 +78,13 @@ TEST(NarUnitTests, NarHeaderParseWrongMagic)
                        "........"
                        "........"
                       );
-  nar::header::narh header;
+  nar::header::initiate header;
 
   ASSERT_NO_THROW({
     try {
       ss >> header;
     } catch (nar::error::invalid_magic_number const& e) {
-      std::uint64_t const magic = nar::known_magic::narh<std::uint64_t>;
+      std::uint64_t const magic = nar::known_magic::initiate<std::uint64_t>;
       std::uint64_t t;
       memcpy(reinterpret_cast<char*>(&t), "<@@@@@@@@>", 8);
 
@@ -86,7 +100,7 @@ TEST(NarUnitTests, NarHeaderParseWrongMagicNotEnoughBytes)
                          "........"
                          "........"
                         );
-    nar::header::narh header;
+    nar::header::initiate header;
     ASSERT_THROW( ss >> header , nar::exception);
 }
 
@@ -108,14 +122,14 @@ TEST_P(NarSerialiseHeader, Property)
 {
   Unit const unit = GetParam();
 
-  nar::header::narh header;
+  nar::header::initiate header;
   header.flags = unit.flags;
   header.length_1 = unit.length_1;
   header.length_2 = unit.length_2;
 
   std::stringstream ss;
 
-  nar::header::narh header_1;
+  nar::header::initiate header_1;
   ss << header;
   ss >> header_1;
 

@@ -97,7 +97,7 @@ int main(int const argc, char const* const* argv)
         nar::header::generic::header h;
         ifs >> h;
         switch (h.magic) {
-          case nar::known_magic::narh<std::uint64_t>:
+          case nar::known_magic::initiate<std::uint64_t>:
             std::cout
                 << "[ NARH ]" << std::endl
                 << "  flags: " << std::hex << h.flags << std::endl

@@ -17,14 +17,14 @@ using namespace nar;
 
 TEST(MagicNumberTest, NarHeader)
 {
-    std::string const magic_str(known_magic::narh<char const*>);
+    std::string const magic_str(known_magic::initiate<char const*>);
 
-    ASSERT_EQ(magic_str.size(), sizeof(known_magic::narh<std::uint64_t>));
+    ASSERT_EQ(magic_str.size(), sizeof(known_magic::initiate<std::uint64_t>));
 
     std::uint64_t const magic =
        *(reinterpret_cast<std::uint64_t const*>(magic_str.data()));
 
-    ASSERT_EQ(magic, nar::known_magic::narh<std::uint64_t>);
+    ASSERT_EQ(magic, nar::known_magic::initiate<std::uint64_t>);
 }
 
 TEST(MagicNumberTest, NarFile)

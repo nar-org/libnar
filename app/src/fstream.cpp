@@ -34,7 +34,7 @@ void ofstream::open(char const* f) {
       std::ifstream ifs(f, std::ios_base::in
                          | std::ios_base::binary
                        );
-      nar::header::narh header;
+      nar::header::initiate header;
       ifs >> header;
     }
   }
@@ -45,7 +45,7 @@ void ofstream::open(char const* f) {
            | std::ios_base::app     // we append
            );
   if (add_header) {
-    ofs_ << nar::header::narh();
+    ofs_ << nar::header::initiate();
   }
 }
 void ofstream::open(std::string const& f) { this->open(f.c_str()); }

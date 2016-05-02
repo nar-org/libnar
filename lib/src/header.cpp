@@ -40,27 +40,41 @@ bool header::operator== (header const& e) const noexcept
       && this->length_2 == e.length_2;
 }
 
-void header::set_compression_1() noexcept { flags |= 1 << 0; }
-void header::clr_compression_1() noexcept { flags ^= 1 << 0; }
-void header::set_compression_2() noexcept { flags |= 1 << 1; }
-void header::clr_compression_2() noexcept { flags ^= 1 << 1; }
+void header::set_compression_1() noexcept { flags |=  flags_compression_1; }
+void header::clr_compression_1() noexcept { flags &= ~flags_compression_1; }
+void header::set_compression_2() noexcept { flags |=  flags_compression_2; }
+void header::clr_compression_2() noexcept { flags &= ~flags_compression_2; }
 
-bool header::compression_1() const noexcept { return flags & (1 << 0); }
-bool header::compression_2() const noexcept { return flags & (1 << 1); }
-
+bool header::compression_1() const noexcept {
+  return flags & flags_compression_1;
+}
+bool header::compression_2() const noexcept {
+  return flags & flags_compression_2;
+}
 }  /* ! namespace generic */
+
+template struct basic_header< known_magic::initiate<std::uint64_t>
+                            , default_flags_initiate
+                            >;
+template struct basic_header<known_magic::file<std::uint64_t> >;
 
 }  /* ! namespace header */
 
-template struct header::basic_header<nar::known_magic::narh<std::uint64_t> >;
-template struct header::basic_header<nar::known_magic::file<std::uint64_t> >;
-
-std::uint16_t version(header::narh const& t) {
+std::uint16_t version(header::initiate const& t) {
   return (t.flags >> 46) & 0x0000FFFF;
 }
-void version(header::narh& t, std::uint16_t const& v) {
+void version(header::initiate& t, std::uint16_t const& v) {
   t.flags &= 0x0000FFFFFFFF;
   t.flags |= (static_cast<std::uint64_t>(v) << 46);
+}
+
+bool executable(header::file const& t) {
+  return t.flags & flags_file_executable;
+}
+void executable(header::file& t, bool const v) {
+  if (v) { t.flags |=  flags_file_executable;
+  } else { t.flags &= ~flags_file_executable;
+  }
 }
 
 } /* ! namespace nar */

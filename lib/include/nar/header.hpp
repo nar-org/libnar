@@ -78,31 +78,38 @@ struct header {
 
 } /* ! namespace generic */
 
-template<std::uint64_t MAGIC>
+template<std::uint64_t MAGIC, std::uint64_t FLAGS = 0>
 struct basic_header
     : generic::header
     , std::integral_constant<std::uint64_t, MAGIC>
 {
-  basic_header() : generic::header(MAGIC) { }
+  basic_header() : generic::header(MAGIC, FLAGS) { }
 
   explicit
   basic_header(generic::header const& h) : generic::header(h) {
     NAR_ASSERT_MAGIC(MAGIC, magic);
   }
 
-  basic_header<MAGIC>& operator= (generic::header const& h) {
+  basic_header<MAGIC, FLAGS>& operator= (generic::header const& h) {
     NAR_ASSERT_MAGIC(MAGIC, h.magic);
     generic::header::operator= (h);
     return *this;
   }
 
-  bool operator== (basic_header<MAGIC> const& e2) const {
+  bool operator== (basic_header<MAGIC, FLAGS> const& e2) const {
     return generic::header::operator== (e2);
   }
 };
 
-extern template struct basic_header<known_magic::narh<std::uint64_t> >;
-using narh = basic_header<known_magic::narh<std::uint64_t> >;
+constexpr std::uint64_t default_flags_initiate
+  = static_cast<std::uint64_t>(current_format_version) << 46;
+extern template struct basic_header< known_magic::initiate<std::uint64_t>
+                                   , default_flags_initiate
+                                   >;
+using initiate = basic_header< known_magic::initiate<std::uint64_t>
+                             , default_flags_initiate
+                             >;
+
 extern template struct basic_header<known_magic::file<std::uint64_t> >;
 using file = basic_header<known_magic::file<std::uint64_t> >;
 
@@ -114,10 +121,11 @@ using file = basic_header<known_magic::file<std::uint64_t> >;
 template<class C>
 struct is_header : std::is_base_of<header::generic::header, C> { };
 
-std::uint16_t version(header::narh const& t);
-void version(header::narh& t, std::uint16_t const& v);
+std::uint16_t version(header::initiate const& t);
+void version(header::initiate& t, std::uint16_t const& v);
 
-
+bool executable(header::file const& t);
+void executable(header::file& t, bool const);
 
 } /* ! namespace nar */
 #endif /** ! LIB_INCLUDE_NAR_HEADER_HPP_  */

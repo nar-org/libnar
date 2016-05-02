@@ -13,6 +13,7 @@ add_executable(${PROJECT_NAME}
     src/MagicNumber.cpp
     src/Roundup.cpp
     src/SerialisationHeader.cpp
+    src/HeaderInitiateVersion.cpp
 
     src/main.cpp
 )
