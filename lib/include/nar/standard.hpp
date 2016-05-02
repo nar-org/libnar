@@ -13,6 +13,18 @@
 
 # include <cstdint>
 
+# if defined(__BIG_ENDIAN__)
+#  warning \
+    This library does not support implementation for big endian. \
+    Report this issue to: https://github.com/nar-org/libnar/issues.
+# elif defined(__LITTLE_ENDIAN__)
+// OK. No byte swap needed.
+# else
+#  error \
+    We cannot detect the endianness. \
+    Report this issue to: https://github.com/nar-org/libnar/issues.
+# endif
+
 namespace nar {
 
 namespace known_magic {
