@@ -13,11 +13,11 @@
 
 # include <cstdint>
 
-# if defined(__BIG_ENDIAN__)
+# if defined(__BIG_ENDIAN__) || (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
 #  warning \
     This library does not support implementation for big endian. \
     Report this issue to: https://github.com/nar-org/libnar/issues.
-# elif defined(__LITTLE_ENDIAN__)
+# elif defined(__LITTLE_ENDIAN__) || (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
 // OK. No byte swap needed.
 # else
 #  error \
