@@ -23,4 +23,8 @@ target_link_libraries(${PROJECT_NAME}
     ${CMAKE_THREAD_LIBS_INIT}
     libnar
 )
-add_test(library-tests ${PROJECT_NAME})
+
+add_test(
+  NAME library-tests
+  COMMAND ${PROJECT_NAME}
+)
